@@ -37,10 +37,11 @@ function updatePreview() {
     previewElement.innerHTML = code;
     
     // Rerender mermaid diagram
-    mermaid.initialize({ startOnLoad: false, theme, flowchart: { htmlLabels: true } });
+    mermaid.initialize({ startOnLoad: false, theme, flowchart: { htmlLabels: false } });
     mermaid.render('mermaid-preview-svg', code).then((svgCode) => {
-        lastRenderedSvg = svgCode.svg;
-        previewElement.innerHTML = svgCode.svg;
+        const styledSvg = inlineSvgTextStyles(svgCode.svg);
+        lastRenderedSvg = styledSvg;
+        previewElement.innerHTML = styledSvg;
         if (downloadButton) {
             downloadButton.disabled = false;
         }
@@ -71,8 +72,71 @@ function sanitizeSvgText(svgText) {
         .replace(/url\((['"]?)https?:[^)]+\1\)/g, '');
 }
 
+function inlineSvgTextStyles(svgText) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const svgNs = 'http://www.w3.org/2000/svg';
+
+    const foreignObjects = Array.from(doc.querySelectorAll('foreignObject'));
+    foreignObjects.forEach(foreignObject => {
+        const parent = foreignObject.parentNode;
+        if (!parent) return;
+
+        const textValue = (foreignObject.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!textValue) {
+            foreignObject.remove();
+            return;
+        }
+
+        const width = parseFloat(foreignObject.getAttribute('width')) || 0;
+        const height = parseFloat(foreignObject.getAttribute('height')) || 0;
+        const textEl = doc.createElementNS(svgNs, 'text');
+        textEl.setAttribute('text-anchor', 'middle');
+        textEl.setAttribute('dominant-baseline', 'middle');
+
+        const fontSize = 14;
+        const lineHeight = Math.round(fontSize * 1.2);
+        const lines = textValue.split(/\n/).map(line => line.trim()).filter(Boolean);
+
+        if (lines.length <= 1) {
+            textEl.setAttribute('x', `${width / 2}`);
+            textEl.setAttribute('y', `${height / 2}`);
+            textEl.textContent = lines[0] || textValue;
+        } else {
+            const startY = (height / 2) - ((lines.length - 1) * lineHeight) / 2;
+            lines.forEach((line, index) => {
+                const tspan = doc.createElementNS(svgNs, 'tspan');
+                tspan.setAttribute('x', `${width / 2}`);
+                tspan.setAttribute('y', `${startY + index * lineHeight}`);
+                tspan.textContent = line;
+                textEl.appendChild(tspan);
+            });
+        }
+
+        parent.insertBefore(textEl, foreignObject);
+        foreignObject.remove();
+    });
+
+    const textNodes = doc.querySelectorAll('text, tspan');
+    textNodes.forEach(node => {
+        if (!node.getAttribute('fill')) {
+            node.setAttribute('fill', '#333');
+        }
+        if (!node.getAttribute('font-family')) {
+            node.setAttribute('font-family', 'Arial, sans-serif');
+        }
+        if (!node.getAttribute('font-size')) {
+            node.setAttribute('font-size', '14');
+        }
+    });
+
+    return new XMLSerializer().serializeToString(doc);
+}
+
 function downloadSvg(svgText) {
-    const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const sanitized = sanitizeSvgText(svgText);
+    const styled = inlineSvgTextStyles(sanitized);
+    const svgBlob = new Blob([styled], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
     const link = document.createElement('a');
     link.href = svgUrl;
@@ -96,6 +160,7 @@ async function downloadPng(scale) {
     if (!svgText) return;
 
     svgText = sanitizeSvgText(svgText);
+    svgText = inlineSvgTextStyles(svgText);
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgText, 'image/svg+xml');
@@ -177,7 +242,7 @@ async function downloadPng(scale) {
     };
     img.src = url;
 
-    mermaid.initialize({ startOnLoad: false, theme, flowchart: { htmlLabels: true } });
+    mermaid.initialize({ startOnLoad: false, theme, flowchart: { htmlLabels: false } });
 }
 
 if (downloadButton && sizeSelect) {

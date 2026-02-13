@@ -24,13 +24,13 @@ export function generateCode(state) {
             shapeEnd = '))';
         }
 
-        const label = (node.text || '').replace(/\n/g, '<br/>');
+        const label = (node.text || '').replace(/\n/g, '\\n');
         return `${indent}${node.id}${shapeStart}"${label}"${shapeEnd}\n`;
     }
 
     // Add nodes
     (state.subgraphs || []).forEach(subgraph => {
-        const title = (subgraph.title || '').replace(/\n/g, '<br/>');
+        const title = (subgraph.title || '').replace(/\n/g, '\\n');
         code += `    subgraph ${subgraph.id}["${title}"]\n`;
         if (subgraph.direction) {
             code += `        direction ${subgraph.direction}\n`;

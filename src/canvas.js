@@ -363,6 +363,7 @@ export function initCanvas(state, onUpdate) {
                      line.setAttribute('marker-end', 'url(#arrowhead)'); // We need to define this marker
                      line.addEventListener('click', (e) => {
                          e.stopPropagation();
+                         if (!(e.ctrlKey || e.metaKey)) return;
                          beginEdgeLabelEdit(edge, midX, midY);
                      });
                      
@@ -377,6 +378,7 @@ export function initCanvas(state, onUpdate) {
                          textEl.textContent = edge.label;
                          textEl.addEventListener('click', (e) => {
                              e.stopPropagation();
+                             if (!(e.ctrlKey || e.metaKey)) return;
                              beginEdgeLabelEdit(edge, midX, midY);
                          });
                          connectionsLayer.appendChild(textEl);
@@ -386,9 +388,11 @@ export function initCanvas(state, onUpdate) {
                          labelBox.setAttribute('y', midY - 12);
                          labelBox.setAttribute('width', '56');
                          labelBox.setAttribute('height', '20');
+                         labelBox.setAttribute('pointer-events', 'all');
                          labelBox.classList.add('edge-label-box');
                          labelBox.addEventListener('click', (e) => {
                              e.stopPropagation();
+                             if (!(e.ctrlKey || e.metaKey)) return;
                              beginEdgeLabelEdit(edge, midX, midY);
                          });
                          connectionsLayer.appendChild(labelBox);
@@ -435,23 +439,30 @@ export function initCanvas(state, onUpdate) {
             if (subgraph.id === activeSubgraphId) {
                 title.classList.add('active');
             }
-            title.innerText = subgraph.title || 'Subgraph';
+            title.style.left = `${bounds.x + 10}px`;
+            title.style.top = `${bounds.y - 12}px`;
+
+            const titleText = document.createElement('span');
+            titleText.className = 'subgraph-title-text';
+            titleText.innerText = subgraph.title || 'Subgraph';
+            title.appendChild(titleText);
+
             const editIcon = document.createElement('span');
             editIcon.className = 'subgraph-edit-icon';
             title.appendChild(editIcon);
             title.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (e.ctrlKey || e.metaKey) {
+                    beginSubgraphTitleEdit(subgraph, title, titleText);
+                    return;
+                }
                 activeSubgraphId = (activeSubgraphId === subgraph.id) ? null : subgraph.id;
                 updateSubgraphs();
                 updateSubgraphControls();
             });
-            title.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                beginSubgraphTitleEdit(subgraph, title);
-            });
 
-            box.appendChild(title);
             subgraphsLayer.appendChild(box);
+            subgraphsLayer.appendChild(title);
         });
     }
 
@@ -572,34 +583,34 @@ export function initCanvas(state, onUpdate) {
         labelEl.addEventListener('keydown', onKeyDown);
     }
 
-    function beginSubgraphTitleEdit(subgraph, titleEl) {
-        if (titleEl.isContentEditable) return;
+    function beginSubgraphTitleEdit(subgraph, titleEl, textEl) {
+        if (textEl.isContentEditable) return;
 
         const originalText = subgraph.title || '';
-        titleEl.contentEditable = 'true';
+        textEl.contentEditable = 'true';
         titleEl.classList.add('editing');
-        titleEl.focus();
+        textEl.focus();
 
         const selection = window.getSelection();
         const range = document.createRange();
-        range.selectNodeContents(titleEl);
+        range.selectNodeContents(textEl);
         selection.removeAllRanges();
         selection.addRange(range);
 
         function finishEdit(shouldSave) {
-            titleEl.contentEditable = 'false';
+            textEl.contentEditable = 'false';
             titleEl.classList.remove('editing');
 
             if (shouldSave) {
-                const newText = titleEl.innerText.trim() || 'Subgraph';
+                const newText = textEl.innerText.trim() || 'Subgraph';
                 subgraph.title = newText;
-                titleEl.innerText = newText;
+                textEl.innerText = newText;
             } else {
-                titleEl.innerText = originalText;
+                textEl.innerText = originalText;
             }
 
-            titleEl.removeEventListener('blur', onBlur);
-            titleEl.removeEventListener('keydown', onKeyDown);
+            textEl.removeEventListener('blur', onBlur);
+            textEl.removeEventListener('keydown', onKeyDown);
             onUpdate();
         }
 
@@ -618,8 +629,8 @@ export function initCanvas(state, onUpdate) {
             }
         }
 
-        titleEl.addEventListener('blur', onBlur);
-        titleEl.addEventListener('keydown', onKeyDown);
+        textEl.addEventListener('blur', onBlur);
+        textEl.addEventListener('keydown', onKeyDown);
     }
 
     function beginEdgeLabelEdit(edge, x, y) {
