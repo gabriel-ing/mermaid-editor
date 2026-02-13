@@ -1,0 +1,301 @@
+:root {
+    --bg-color: #f8f9fa;
+    --sidebar-width: 250px;
+    --border-color: #e0e0e0;
+    --node-bg: #fff;
+    --node-border: #333;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg-color);
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    height: 100%;
+}
+
+#sidebar {
+    width: var(--sidebar-width);
+    padding: 20px;
+    background: #fff;
+    border-right: 1px solid var(--border-color);
+}
+
+.sidebar-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 12px 0;
+}
+
+#group-button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #333;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+}
+
+#add-to-subgraph-button,
+#remove-from-subgraph-button {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #333;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 6px;
+}
+
+#add-to-subgraph-button:disabled,
+#remove-from-subgraph-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#settings-panel {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#settings-panel h3 {
+    margin: 6px 0 2px;
+    font-size: 14px;
+}
+
+.settings-label {
+    font-size: 12px;
+    color: #333;
+}
+
+#settings-panel select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #333;
+    background: #fff;
+}
+
+.draggable-node {
+    padding: 10px;
+    margin: 5px 0;
+    background: #eee;
+    cursor: grab;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+#main-content {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+#canvas-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="1" cy="1" r="1" fill="rgba(0,0,0,0.1)"/></svg>');
+}
+
+/* SVG layer for connections */
+#connections-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto; /* Allow edge label editing */
+    z-index: 1;
+}
+
+#subgraphs-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    z-index: 2;
+}
+
+#connections-layer line {
+    pointer-events: stroke;
+}
+
+#connections-layer text {
+    pointer-events: all;
+}
+
+/* HTML layer for nodes */
+#nodes-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Canvas itself shouldn't capture events */
+    z-index: 3;
+}
+
+.node {
+    position: absolute;
+    background: var(--node-bg);
+    border: 2px solid var(--node-border);
+    padding: 10px;
+    cursor: grab;
+    pointer-events: auto; /* Re-enable events for nodes */
+    user-select: none;
+    min-width: 80px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subgraph-box {
+    position: absolute;
+    border: 2px dashed #666;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+}
+
+.subgraph-box.active {
+    border-color: #007bff;
+}
+
+.subgraph-title {
+    position: absolute;
+    top: -12px;
+    left: 10px;
+    background: #fff;
+    padding: 2px 6px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: auto;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.subgraph-title.active {
+    border-color: #007bff;
+    box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.2);
+}
+
+.subgraph-title.editing {
+    background: #fff8dc;
+}
+
+.subgraph-edit-icon {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
+    background-size: 12px 12px;
+    background-repeat: no-repeat;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 20h9'/><path d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z'/></svg>");
+    pointer-events: none;
+}
+
+.node-label {
+    outline: none;
+    min-width: 10px;
+    white-space: pre-wrap;
+    line-height: 1.2;
+}
+
+.node-label.editing {
+    background: #fff8dc;
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+.node.selected {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+#preview-panel {
+    width: var(--sidebar-width);
+    padding: 20px;
+    background: #fff;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+#preview-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+#preview-actions select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #333;
+    background: #fff;
+}
+
+#download-png {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #333;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+}
+
+#mermaid-code {
+    width: 100%;
+    height: 200px;
+    resize: none;
+    font-family: monospace;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#mermaid-preview {
+    margin-top: 20px;
+    border: 1px solid #eee;
+    padding: 10px;
+    overflow: auto;
+    flex-grow: 1;
+}
+
+.edge-label {
+    fill: #333;
+    font-size: 12px;
+    user-select: none;
+}
+
+.edge-label-box {
+    fill: transparent;
+    stroke: #777;
+    stroke-dasharray: 4 3;
+    stroke-width: 1;
+    opacity: 0.7;
+}
+
+.edge-label-input {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    padding: 4px 6px;
+    font-size: 12px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background: #fff;
+    z-index: 10;
+}

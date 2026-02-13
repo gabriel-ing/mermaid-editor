@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid.js Graphical Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <h2>Tools</h2>
+            <div class="draggable-node" draggable="true" data-type="rect">Rectangle</div>
+            <div class="draggable-node" draggable="true" data-type="rounded">Rounded</div>
+            <div class="draggable-node" draggable="true" data-type="diamond">Diamond</div>
+            <div class="draggable-node" draggable="true" data-type="circle">Circle</div>
+            <div class="sidebar-divider"></div>
+            <button id="group-button" type="button">Create Subgraph</button>
+            <button id="add-to-subgraph-button" type="button">Add Selected to Subgraph</button>
+            <button id="remove-from-subgraph-button" type="button">Remove Selected from Subgraph</button>
+            <div class="sidebar-divider"></div>
+            <div id="settings-panel">
+                <h3>Settings</h3>
+                <label class="settings-label" for="theme-select">Theme</label>
+                <select id="theme-select">
+                    <option value="default">Default</option>
+                    <option value="forest">Forest</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="dark">Dark</option>
+                </select>
+
+                <label class="settings-label" for="global-direction">Global Direction</label>
+                <select id="global-direction">
+                    <option value="TD">Top-Down (TD)</option>
+                    <option value="LR">Left-Right (LR)</option>
+                </select>
+
+                <label class="settings-label" for="subgraph-direction">Subgraph Direction</label>
+                <select id="subgraph-direction">
+                    <option value="TD">Top-Down (TD)</option>
+                    <option value="LR">Left-Right (LR)</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main id="main-content">
+            <div id="canvas-container">
+                <!-- SVG layer for connections -->
+                <svg id="connections-layer"></svg>
+                <!-- HTML layer for subgraphs -->
+                <div id="subgraphs-layer"></div>
+                <!-- HTML layer for nodes -->
+                <div id="nodes-layer"></div>
+            </div>
+        </main>
+
+        <!-- Preview & Code -->
+        <aside id="preview-panel">
+            <h2>Generated Mermaid Code</h2>
+            <textarea id="mermaid-code" readonly></textarea>
+            <h2>Preview</h2>
+            <div id="preview-actions">
+                <label class="settings-label" for="png-size">PNG Size</label>
+                <select id="png-size">
+                    <option value="1">Small</option>
+                    <option value="2" selected>Medium</option>
+                    <option value="3">Large</option>
+                </select>
+                <button id="download-png" type="button">Download PNG</button>
+            </div>
+            <div id="mermaid-preview" class="mermaid">
+                graph TD
+            </div>
+        </aside>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
