@@ -9,7 +9,26 @@ export function initCanvas(state, onUpdate) {
     const groupButton = document.getElementById('group-button');
     const addToSubgraphButton = document.getElementById('add-to-subgraph-button');
     const removeFromSubgraphButton = document.getElementById('remove-from-subgraph-button');
+    const resetCanvasButton = document.getElementById('reset-canvas-button');
+    const shapeDropdown = document.getElementById('shape-dropdown');
+    const shapeDropdownToggle = document.getElementById('shape-dropdown-toggle');
+    const shapeDropdownMenu = document.getElementById('shape-dropdown-menu');
     const themeSelect = document.getElementById('theme-select');
+    const customThemeSettings = document.getElementById('custom-theme-settings');
+    const themeBackground = document.getElementById('theme-background');
+    const themeBackgroundHex = document.getElementById('theme-background-hex');
+    const themePrimaryColor = document.getElementById('theme-primary-color');
+    const themePrimaryColorHex = document.getElementById('theme-primary-color-hex');
+    const themePrimaryBorderColor = document.getElementById('theme-primary-border-color');
+    const themePrimaryBorderColorHex = document.getElementById('theme-primary-border-color-hex');
+    const themePrimaryTextColor = document.getElementById('theme-primary-text-color');
+    const themePrimaryTextColorHex = document.getElementById('theme-primary-text-color-hex');
+    const themeLineColor = document.getElementById('theme-line-color');
+    const themeLineColorHex = document.getElementById('theme-line-color-hex');
+    const themeClusterBg = document.getElementById('theme-cluster-bg');
+    const themeClusterBgHex = document.getElementById('theme-cluster-bg-hex');
+    const themeClusterBorder = document.getElementById('theme-cluster-border');
+    const themeClusterBorderHex = document.getElementById('theme-cluster-border-hex');
     const globalDirectionSelect = document.getElementById('global-direction');
     const subgraphDirectionSelect = document.getElementById('subgraph-direction');
 
@@ -20,13 +39,201 @@ export function initCanvas(state, onUpdate) {
     const selectedNodeIds = new Set();
     let activeSubgraphId = null;
 
+    const customShapes = [
+        { type: 'bang', label: 'Bang' },
+        { type: 'notch-rect', label: 'Card' },
+        { type: 'cloud', label: 'Cloud' },
+        { type: 'hourglass', label: 'Collate' },
+        { type: 'bolt', label: 'Com Link' },
+        { type: 'brace', label: 'Comment' },
+        { type: 'brace-r', label: 'Comment Right' },
+        { type: 'braces', label: 'Comment Both' },
+        { type: 'lean-r', label: 'Data Input/Output' },
+        { type: 'lean-l', label: 'Data Input/Output' },
+        { type: 'cyl', label: 'Database' },
+        { type: 'diam', label: 'Decision' },
+        { type: 'delay', label: 'Delay' },
+        { type: 'h-cyl', label: 'Direct Access Storage' },
+        { type: 'lin-cyl', label: 'Disk Storage' },
+        { type: 'curv-trap', label: 'Display' },
+        { type: 'div-rect', label: 'Divided Process' },
+        { type: 'doc', label: 'Document' },
+        { type: 'rounded', label: 'Event' },
+        { type: 'tri', label: 'Extract' },
+        { type: 'fork', label: 'Fork/Join' },
+        { type: 'win-pane', label: 'Internal Storage' },
+        { type: 'f-circ', label: 'Junction' },
+        { type: 'lin-doc', label: 'Lined Document' },
+        { type: 'lin-rect', label: 'Lined/Shaded Process' },
+        { type: 'notch-pent', label: 'Loop Limit' },
+        { type: 'flip-tri', label: 'Manual File' },
+        { type: 'sl-rect', label: 'Manual Input' },
+        { type: 'trap-t', label: 'Manual Operation' },
+        { type: 'docs', label: 'Multi-Document' },
+        { type: 'st-rect', label: 'Multi-Process' },
+        { type: 'odd', label: 'Odd' },
+        { type: 'flag', label: 'Paper Tape' },
+        { type: 'hex', label: 'Prepare Conditional' },
+        { type: 'trap-b', label: 'Priority Action' },
+        { type: 'rect', label: 'Process' },
+        { type: 'circle', label: 'Start' },
+        { type: 'sm-circ', label: 'Start (Small)' },
+        { type: 'dbl-circ', label: 'Stop' },
+        { type: 'fr-circ', label: 'Stop (Framed)' },
+        { type: 'bow-rect', label: 'Stored Data' },
+        { type: 'fr-rect', label: 'Subprocess' },
+        { type: 'cross-circ', label: 'Summary' },
+        { type: 'tag-doc', label: 'Tagged Document' },
+        { type: 'tag-rect', label: 'Tagged Process' },
+        { type: 'stadium', label: 'Terminal Point' },
+        { type: 'text', label: 'Text Block' }
+    ];
+
     themeSelect.value = state.settings?.theme || 'default';
+    if (!state.settings.customTheme) {
+        state.settings.customTheme = {};
+    }
+
+    const fallbackTheme = {
+        background: '#ffffff',
+        primaryColor: '#ffffff',
+        primaryBorderColor: '#333333',
+        primaryTextColor: '#333333',
+        lineColor: '#333333',
+        clusterBkg: '#f5f5f5',
+        clusterBorder: '#999999'
+    };
+
+    const customThemeFields = [
+        { key: 'background', colorInput: themeBackground, hexInput: themeBackgroundHex },
+        { key: 'primaryColor', colorInput: themePrimaryColor, hexInput: themePrimaryColorHex },
+        { key: 'primaryBorderColor', colorInput: themePrimaryBorderColor, hexInput: themePrimaryBorderColorHex },
+        { key: 'primaryTextColor', colorInput: themePrimaryTextColor, hexInput: themePrimaryTextColorHex },
+        { key: 'lineColor', colorInput: themeLineColor, hexInput: themeLineColorHex },
+        { key: 'clusterBkg', colorInput: themeClusterBg, hexInput: themeClusterBgHex },
+        { key: 'clusterBorder', colorInput: themeClusterBorder, hexInput: themeClusterBorderHex }
+    ];
+
+    function normalizeHexValue(value) {
+        if (!value) return null;
+        let normalized = value.trim();
+        if (!normalized) return null;
+        if (normalized[0] !== '#') {
+            normalized = `#${normalized}`;
+        }
+        const shortMatch = normalized.match(/^#([0-9a-fA-F]{3})$/);
+        if (shortMatch) {
+            const [r, g, b] = shortMatch[1].split('');
+            return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+        }
+        const longMatch = normalized.match(/^#([0-9a-fA-F]{6})$/);
+        if (longMatch) {
+            return `#${longMatch[1]}`.toLowerCase();
+        }
+        return null;
+    }
+
+    function getThemeValue(key) {
+        return state.settings.customTheme[key] || fallbackTheme[key];
+    }
+
+    function applyThemeToCanvas() {
+        const rootStyle = document.documentElement.style;
+        const useCustomTheme = themeSelect.value === 'custom';
+        const themeVars = [
+            { css: '--canvas-bg', key: 'background' },
+            { css: '--node-bg', key: 'primaryColor' },
+            { css: '--node-border', key: 'primaryBorderColor' },
+            { css: '--node-text', key: 'primaryTextColor' },
+            { css: '--edge-color', key: 'lineColor' },
+            { css: '--edge-label-color', key: 'primaryTextColor' },
+            { css: '--edge-label-box-border', key: 'lineColor' },
+            { css: '--edge-label-input-border', key: 'lineColor' },
+            { css: '--edge-label-input-bg', key: 'background' },
+            { css: '--subgraph-bg', key: 'clusterBkg' },
+            { css: '--subgraph-border', key: 'clusterBorder' },
+            { css: '--subgraph-title-bg', key: 'background' },
+            { css: '--subgraph-title-border', key: 'clusterBorder' }
+        ];
+
+        themeVars.forEach(({ css, key }) => {
+            if (useCustomTheme) {
+                rootStyle.setProperty(css, getThemeValue(key));
+            } else {
+                rootStyle.removeProperty(css);
+            }
+        });
+
+        updateConnections();
+        updateSubgraphs();
+    }
+
+    function getEdgeColor() {
+        if (themeSelect.value === 'custom') {
+            return getThemeValue('lineColor');
+        }
+        return '#333';
+    }
+
+    function setThemeValue(key, value) {
+        if (!value) return;
+        state.settings.customTheme[key] = value;
+        applyThemeToCanvas();
+        if (themeSelect.value === 'custom') {
+            onUpdate();
+        }
+    }
+
+    customThemeFields.forEach(({ key, colorInput, hexInput }) => {
+        if (!colorInput || !hexInput) return;
+
+        const initialValue = getThemeValue(key);
+        colorInput.value = initialValue;
+        hexInput.value = initialValue;
+
+        colorInput.addEventListener('input', () => {
+            const value = normalizeHexValue(colorInput.value) || colorInput.value;
+            colorInput.value = value;
+            hexInput.value = value;
+            setThemeValue(key, value);
+        });
+
+        hexInput.addEventListener('input', () => {
+            const normalized = normalizeHexValue(hexInput.value);
+            if (!normalized) return;
+            hexInput.value = normalized;
+            colorInput.value = normalized;
+            setThemeValue(key, normalized);
+        });
+
+        hexInput.addEventListener('blur', () => {
+            const normalized = normalizeHexValue(hexInput.value);
+            const fallbackValue = getThemeValue(key);
+            if (!normalized) {
+                hexInput.value = fallbackValue;
+                colorInput.value = fallbackValue;
+                return;
+            }
+            hexInput.value = normalized;
+            colorInput.value = normalized;
+        });
+    });
+
     globalDirectionSelect.value = state.settings?.direction || 'TD';
     subgraphDirectionSelect.value = 'TD';
     subgraphDirectionSelect.disabled = true;
 
+    function updateCustomThemeVisibility() {
+        if (!customThemeSettings) return;
+        customThemeSettings.style.display = themeSelect.value === 'custom' ? 'flex' : 'none';
+        applyThemeToCanvas();
+    }
+
+    updateCustomThemeVisibility();
+
     themeSelect.addEventListener('change', () => {
         state.settings.theme = themeSelect.value;
+        updateCustomThemeVisibility();
         onUpdate();
     });
 
@@ -50,6 +257,68 @@ export function initCanvas(state, onUpdate) {
             e.dataTransfer.setData('text', node.innerText);
         });
     });
+
+    function buildShapeDropdown() {
+        if (!shapeDropdownMenu || !shapeDropdownToggle || !shapeDropdown) return;
+
+        shapeDropdownMenu.innerHTML = '';
+        customShapes.forEach(shape => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'shape-menu-item';
+            item.dataset.shape = shape.type;
+            item.dataset.label = shape.label;
+
+            const icon = document.createElement('span');
+            icon.className = 'shape-icon';
+            icon.setAttribute('data-shape', shape.type);
+
+            const text = document.createElement('span');
+            text.className = 'shape-text';
+            text.innerHTML = `${shape.label}<small>${shape.type}</small>`;
+
+            item.appendChild(icon);
+            item.appendChild(text);
+            shapeDropdownMenu.appendChild(item);
+        });
+
+        shapeDropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = shapeDropdown.classList.toggle('open');
+            shapeDropdownToggle.setAttribute('aria-expanded', String(isOpen));
+            shapeDropdownMenu.setAttribute('aria-hidden', String(!isOpen));
+        });
+
+        shapeDropdownMenu.addEventListener('click', (e) => {
+            const item = e.target.closest('.shape-menu-item');
+            if (!item) return;
+            const rect = canvasContainer.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            addNode(item.dataset.shape, item.dataset.label, centerX, centerY);
+            shapeDropdown.classList.remove('open');
+            shapeDropdownToggle.setAttribute('aria-expanded', 'false');
+            shapeDropdownMenu.setAttribute('aria-hidden', 'true');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!shapeDropdown.contains(e.target)) {
+                shapeDropdown.classList.remove('open');
+                shapeDropdownToggle.setAttribute('aria-expanded', 'false');
+                shapeDropdownMenu.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (!shapeDropdown.classList.contains('open')) return;
+            shapeDropdown.classList.remove('open');
+            shapeDropdownToggle.setAttribute('aria-expanded', 'false');
+            shapeDropdownMenu.setAttribute('aria-hidden', 'true');
+        });
+    }
+
+    buildShapeDropdown();
 
     canvasContainer.addEventListener('dragover', (e) => {
         e.preventDefault(); // allow drop
@@ -127,6 +396,28 @@ export function initCanvas(state, onUpdate) {
         onUpdate();
     });
 
+    resetCanvasButton.addEventListener('click', () => {
+        if (state.nodes.length === 0 && state.edges.length === 0 && state.subgraphs.length === 0) {
+            return;
+        }
+
+        const labelInput = canvasContainer.querySelector('.edge-label-input');
+        if (labelInput) labelInput.remove();
+
+        clearSelection();
+        activeSubgraphId = null;
+        state.nodes = [];
+        state.edges = [];
+        state.subgraphs = [];
+
+        nodesLayer.innerHTML = '';
+        connectionsLayer.innerHTML = '';
+        subgraphsLayer.innerHTML = '';
+
+        updateSubgraphControls();
+        onUpdate();
+    });
+
     document.addEventListener('keydown', (e) => {
         const active = document.activeElement;
         if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
@@ -152,6 +443,7 @@ export function initCanvas(state, onUpdate) {
     function renderNode(nodeData) {
         const nodeEl = document.createElement('div');
         nodeEl.classList.add('node');
+        nodeEl.dataset.shape = nodeData.type;
         const labelEl = document.createElement('div');
         labelEl.classList.add('node-label');
         labelEl.innerText = nodeData.text;
@@ -270,7 +562,7 @@ export function initCanvas(state, onUpdate) {
 
         // Create a temporary line
         const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        tempLine.setAttribute('stroke', '#333');
+        tempLine.setAttribute('stroke', getEdgeColor());
         tempLine.setAttribute('stroke-width', '2');
         connectionsLayer.appendChild(tempLine);
 
@@ -320,12 +612,13 @@ export function initCanvas(state, onUpdate) {
         
         // Re-add marker definition
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        defs.innerHTML = `
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" 
-            refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
-            </marker>
-        `;
+                const edgeColor = getEdgeColor();
+                defs.innerHTML = `
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                        refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="${edgeColor}" />
+                        </marker>
+                `;
         connectionsLayer.appendChild(defs);
 
         state.edges.forEach(edge => {
@@ -358,7 +651,7 @@ export function initCanvas(state, onUpdate) {
                      line.setAttribute('y1', y1);
                      line.setAttribute('x2', x2);
                      line.setAttribute('y2', y2);
-                     line.setAttribute('stroke', '#333');
+                     line.setAttribute('stroke', edgeColor);
                      line.setAttribute('stroke-width', '2');
                      line.setAttribute('marker-end', 'url(#arrowhead)'); // We need to define this marker
                      line.addEventListener('click', (e) => {
@@ -404,13 +697,13 @@ export function initCanvas(state, onUpdate) {
         updateSubgraphs();
         
         // Ensure arrowhead definition exists
-        if (!document.getElementById('svg-defs')) {
+                if (!document.getElementById('svg-defs')) {
             const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
             defs.id = 'svg-defs';
             defs.innerHTML = `
                 <marker id="arrowhead" markerWidth="10" markerHeight="7" 
                 refX="10" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="${edgeColor}" />
                 </marker>
             `;
             connectionsLayer.appendChild(defs);

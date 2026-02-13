@@ -10,22 +10,20 @@ export function generateCode(state) {
     });
 
     function formatNode(node, indent) {
-        let shapeStart = '[';
-        let shapeEnd = ']';
+        const label = (node.text || '').replace(/\n/g, '\\n');
+        const legacyShapes = {
+            rect: ['[', ']'],
+            rounded: ['(', ')'],
+            diamond: ['{', '}'],
+            circle: ['((', '))']
+        };
 
-        if (node.type === 'rounded') {
-            shapeStart = '(';
-            shapeEnd = ')';
-        } else if (node.type === 'diamond') {
-            shapeStart = '{';
-            shapeEnd = '}';
-        } else if (node.type === 'circle') {
-            shapeStart = '((';
-            shapeEnd = '))';
+        if (legacyShapes[node.type]) {
+            const [shapeStart, shapeEnd] = legacyShapes[node.type];
+            return `${indent}${node.id}${shapeStart}"${label}"${shapeEnd}\n`;
         }
 
-        const label = (node.text || '').replace(/\n/g, '\\n');
-        return `${indent}${node.id}${shapeStart}"${label}"${shapeEnd}\n`;
+        return `${indent}${node.id}@{shape: "${node.type}", label: "${label}"}\n`;
     }
 
     // Add nodes

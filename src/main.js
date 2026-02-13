@@ -7,13 +7,24 @@ import mermaid from 'mermaid';
 // Initialize mermaid
 mermaid.initialize({ startOnLoad: true, theme: 'default' });
 
+const defaultCustomTheme = {
+    background: '#ffffff',
+    primaryColor: '#ffffff',
+    primaryBorderColor: '#333333',
+    primaryTextColor: '#333333',
+    lineColor: '#333333',
+    clusterBkg: '#f5f5f5',
+    clusterBorder: '#999999'
+};
+
 const state = {
     nodes: [],
     edges: [],
     subgraphs: [],
     settings: {
         theme: 'default',
-        direction: 'TD'
+        direction: 'TD',
+        customTheme: { ...defaultCustomTheme }
     }
 };
 
@@ -31,13 +42,13 @@ function updatePreview() {
     const code = generateCode(state);
     const codeElement = document.getElementById('mermaid-code');
     const previewElement = document.getElementById('mermaid-preview');
-    const theme = state.settings?.theme || 'default';
+    const config = getMermaidConfig();
 
     codeElement.value = code;
     previewElement.innerHTML = code;
     
     // Rerender mermaid diagram
-    mermaid.initialize({ startOnLoad: false, theme, flowchart: { htmlLabels: false } });
+    mermaid.initialize(config);
     mermaid.render('mermaid-preview-svg', code).then((svgCode) => {
         const styledSvg = inlineSvgTextStyles(svgCode.svg);
         lastRenderedSvg = styledSvg;
@@ -54,16 +65,41 @@ function updatePreview() {
     });
 }
 
-async function getExportSvg(theme) {
+async function getExportSvg() {
     const code = generateCode(state);
+    const config = getMermaidConfig();
     mermaid.initialize({
-        startOnLoad: false,
-        theme,
-        securityLevel: 'strict',
-        flowchart: { htmlLabels: false }
+        ...config,
+        securityLevel: 'strict'
     });
     const svgCode = await mermaid.render('mermaid-export-svg', code);
     return svgCode.svg;
+}
+
+function buildThemeVariables(customTheme) {
+    const merged = { ...defaultCustomTheme, ...(customTheme || {}) };
+    return {
+        background: merged.background,
+        primaryColor: merged.primaryColor,
+        primaryBorderColor: merged.primaryBorderColor,
+        primaryTextColor: merged.primaryTextColor,
+        lineColor: merged.lineColor,
+        clusterBkg: merged.clusterBkg,
+        clusterBorder: merged.clusterBorder
+    };
+}
+
+function getMermaidConfig() {
+    const theme = state.settings?.theme || 'default';
+    const baseConfig = { startOnLoad: false, flowchart: { htmlLabels: false } };
+    if (theme === 'custom') {
+        return {
+            ...baseConfig,
+            theme: 'base',
+            themeVariables: buildThemeVariables(state.settings?.customTheme)
+        };
+    }
+    return { ...baseConfig, theme };
 }
 
 function sanitizeSvgText(svgText) {
@@ -148,11 +184,10 @@ function downloadSvg(svgText) {
 }
 
 async function downloadPng(scale) {
-    const theme = state.settings?.theme || 'default';
     let svgText = '';
 
     try {
-        svgText = await getExportSvg(theme);
+        svgText = await getExportSvg();
     } catch (error) {
         svgText = lastRenderedSvg;
     }
@@ -242,7 +277,7 @@ async function downloadPng(scale) {
     };
     img.src = url;
 
-    mermaid.initialize({ startOnLoad: false, theme, flowchart: { htmlLabels: false } });
+    mermaid.initialize(getMermaidConfig());
 }
 
 if (downloadButton && sizeSelect) {
