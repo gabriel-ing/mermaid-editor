@@ -25,6 +25,18 @@ body {
     overflow: hidden;
 }
 
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #333;
+}
+
+.settings-toggle input {
+    margin: 0;
+}
+
 #app {
     display: flex;
     height: 100%;
@@ -474,6 +486,100 @@ body {
     padding: 10px;
     overflow: auto;
     flex-grow: 1;
+}
+
+body.dark {
+    background: #121316;
+    color: #e6e7eb;
+}
+
+body.dark {
+    --canvas-bg: #151821;
+    --node-bg: #1f2330;
+    --node-border: #6f7a8c;
+    --node-text: #e6e7eb;
+    --edge-color: #c9ccd4;
+    --edge-label-color: #c9ccd4;
+    --edge-label-box-border: #6f7a8c;
+    --edge-label-input-border: #6f7a8c;
+    --edge-label-input-bg: #1f2330;
+    --subgraph-bg: rgba(60, 66, 82, 0.35);
+    --subgraph-border: #7c869a;
+    --subgraph-title-bg: #1f2330;
+    --subgraph-title-border: #6f7a8c;
+}
+
+body.dark #sidebar {
+    background: #1b1d22;
+    border-color: #2b2e36;
+    color: #e6e7eb;
+}
+
+body.dark .sidebar-divider {
+    background: #2b2e36;
+}
+
+body.dark .settings-label,
+body.dark .settings-toggle {
+    color: #c9ccd4;
+}
+
+body.dark #sidebar select,
+body.dark #sidebar .theme-hex-input,
+body.dark #sidebar input[type="text"],
+body.dark #sidebar input[type="color"] {
+    background: #232630;
+    border-color: #3a3f4a;
+    color: #e6e7eb;
+}
+
+body.dark #group-button,
+body.dark #add-to-subgraph-button,
+body.dark #remove-from-subgraph-button,
+body.dark #reset-canvas-button,
+body.dark #shape-dropdown-toggle {
+    background: #232630;
+    border-color: #3a3f4a;
+    color: #e6e7eb;
+}
+
+body.dark .draggable-node {
+    background: #232630;
+    border-color: #3a3f4a;
+    color: #e6e7eb;
+}
+
+body.dark #custom-theme-settings {
+    background: #20232b;
+    border-color: #2b2e36;
+}
+
+body.dark #main-content {
+    background: #121316;
+}
+
+body.dark #canvas-container {
+    background-color: var(--canvas-bg);
+    background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.08)"/></svg>');
+}
+
+body.dark .shape-dropdown-menu {
+    background: #1b1d22;
+    border-color: #3a3f4a;
+}
+
+body.dark .shape-menu-item:hover {
+    background: #2a2d35;
+}
+
+body.dark .shape-icon {
+    border-color: #c9ccd4;
+    background: #1b1d22;
+}
+
+body.dark .shape-icon[data-shape="tri"],
+body.dark .shape-icon[data-shape="flip-tri"] {
+    border-bottom-color: #c9ccd4;
 }
 
 .edge-label {

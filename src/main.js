@@ -32,6 +32,19 @@ let lastRenderedSvg = '';
 const downloadButton = document.getElementById('download-png');
 const sizeSelect = document.getElementById('png-size');
 const downloadStatus = document.getElementById('download-status');
+const uiThemeToggle = document.getElementById('ui-theme-toggle');
+
+const storedUiTheme = localStorage.getItem('ui-theme');
+const prefersDark = storedUiTheme === 'dark';
+document.body.classList.toggle('dark', prefersDark);
+if (uiThemeToggle) {
+    uiThemeToggle.checked = prefersDark;
+    uiThemeToggle.addEventListener('change', () => {
+        const isDark = uiThemeToggle.checked;
+        document.body.classList.toggle('dark', isDark);
+        localStorage.setItem('ui-theme', isDark ? 'dark' : 'light');
+    });
+}
 
 function setDownloadStatus(message) {
     if (!downloadStatus) return;
