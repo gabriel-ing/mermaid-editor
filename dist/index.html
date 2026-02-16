@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid.js Graphical Editor</title>
+  <script type="module" crossorigin src="./assets/index-sOhAO_mF.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-RCGzhjrj.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <h2>Tools</h2>
+            <div class="draggable-node" draggable="true" data-type="rect">Rectangle</div>
+            <div class="draggable-node" draggable="true" data-type="rounded">Rounded</div>
+            <div class="draggable-node" draggable="true" data-type="diamond">Diamond</div>
+            <div class="draggable-node" draggable="true" data-type="circle">Circle</div>
+            <div class="sidebar-divider"></div>
+            <button id="group-button" type="button">Create Subgraph</button>
+            <button id="add-to-subgraph-button" type="button">Add Selected to Subgraph</button>
+            <button id="remove-from-subgraph-button" type="button">Remove Selected from Subgraph</button>
+            <button id="reset-canvas-button" type="button">Reset Canvas</button>
+            <div class="sidebar-divider"></div>
+            <div id="settings-panel">
+                <h3>Settings</h3>
+                <label class="settings-label" for="ui-theme-toggle">UI Theme</label>
+                <label class="settings-toggle">
+                    <input id="ui-theme-toggle" type="checkbox" />
+                    Dark mode
+                </label>
+                <label class="settings-label" for="theme-select">Theme</label>
+                <select id="theme-select">
+                    <option value="default">Default</option>
+                    <option value="forest">Forest</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="dark">Dark</option>
+                    <option value="custom">Custom</option>
+                </select>
+
+                <div id="custom-theme-settings">
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-background">Background</label>
+                        <div class="theme-inputs">
+                            <input id="theme-background" type="color" />
+                            <input id="theme-background-hex" class="theme-hex-input" type="text" placeholder="#ffffff" />
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-primary-color">Primary fill</label>
+                        <div class="theme-inputs">
+                            <input id="theme-primary-color" type="color" />
+                            <input id="theme-primary-color-hex" class="theme-hex-input" type="text" placeholder="#ffffff" />
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-primary-border-color">Primary border</label>
+                        <div class="theme-inputs">
+                            <input id="theme-primary-border-color" type="color" />
+                            <input id="theme-primary-border-color-hex" class="theme-hex-input" type="text" placeholder="#333333" />
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-primary-text-color">Primary text</label>
+                        <div class="theme-inputs">
+                            <input id="theme-primary-text-color" type="color" />
+                            <input id="theme-primary-text-color-hex" class="theme-hex-input" type="text" placeholder="#333333" />
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-line-color">Line color</label>
+                        <div class="theme-inputs">
+                            <input id="theme-line-color" type="color" />
+                            <input id="theme-line-color-hex" class="theme-hex-input" type="text" placeholder="#333333" />
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-cluster-bg">Cluster fill</label>
+                        <div class="theme-inputs">
+                            <input id="theme-cluster-bg" type="color" />
+                            <input id="theme-cluster-bg-hex" class="theme-hex-input" type="text" placeholder="#f5f5f5" />
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <label class="settings-label" for="theme-cluster-border">Cluster border</label>
+                        <div class="theme-inputs">
+                            <input id="theme-cluster-border" type="color" />
+                            <input id="theme-cluster-border-hex" class="theme-hex-input" type="text" placeholder="#999999" />
+                        </div>
+                    </div>
+                </div>
+
+                <label class="settings-label" for="global-direction">Global Direction</label>
+                <select id="global-direction">
+                    <option value="TD">Top-Down (TD)</option>
+                    <option value="LR">Left-Right (LR)</option>
+                </select>
+
+                <label class="settings-label" for="subgraph-direction">Subgraph Direction</label>
+                <select id="subgraph-direction">
+                    <option value="TD">Top-Down (TD)</option>
+                    <option value="LR">Left-Right (LR)</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main id="main-content">
+            <div id="canvas-toolbar">
+                <div id="shape-dropdown" class="shape-dropdown">
+                    <button id="shape-dropdown-toggle" type="button" aria-haspopup="listbox" aria-expanded="false">
+                        Custom Shapes
+                    </button>
+                    <div id="shape-dropdown-menu" class="shape-dropdown-menu" role="listbox" aria-hidden="true"></div>
+                </div>
+            </div>
+            <div id="canvas-container">
+                <!-- SVG layer for connections -->
+                <svg id="connections-layer"></svg>
+                <!-- HTML layer for subgraphs -->
+                <div id="subgraphs-layer"></div>
+                <!-- HTML layer for nodes -->
+                <div id="nodes-layer"></div>
+            </div>
+        </main>
+
+        <!-- Preview & Code -->
+        <aside id="preview-panel">
+            <h2>Generated Mermaid Code</h2>
+            <textarea id="mermaid-code" readonly></textarea>
+            <h2>Preview</h2>
+            <div id="preview-actions">
+                <label class="settings-label" for="png-size">PNG Size</label>
+                <select id="png-size">
+                    <option value="1">Small</option>
+                    <option value="2" selected>Medium</option>
+                    <option value="3">Large</option>
+                </select>
+                <button id="download-png" type="button" disabled>Download PNG</button>
+                <div id="download-status" aria-live="polite"></div>
+            </div>
+            <div id="mermaid-preview" class="mermaid">
+                graph TD
+            </div>
+        </aside>
+    </div>
+</body>
+</html>
